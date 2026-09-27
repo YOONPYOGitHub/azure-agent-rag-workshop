@@ -1,0 +1,20 @@
+name: Workshop checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.1"
+          python-version: "3.11"
+      - run: uv sync --frozen
+      - run: uv run pytest tests infra/tests -q
+      - run: uv run ruff check src app tests infra scripts
+      - run: uv run python scripts/run_notebooks.py --check

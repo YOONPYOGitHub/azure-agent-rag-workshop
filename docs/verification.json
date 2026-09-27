@@ -1,0 +1,17 @@
+{
+  "verified_at": "2026-09-27T22:52:35.915504+09:00",
+  "offline_tests": 69,
+  "subtests": 10,
+  "executed_notebooks": 7,
+  "indexes": 11,
+  "chunks_per_index": 54,
+  "total_uploaded_chunks": 594,
+  "security_checks": 21,
+  "ten_concurrent_requests": {
+    "min_s": 2.85,
+    "max_s": 3.61,
+    "median_s": 2.9450000000000003
+  },
+  "ui_verified": true,
+  "legacy_api_unchanged": true
+}

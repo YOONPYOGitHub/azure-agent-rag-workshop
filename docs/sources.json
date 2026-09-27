@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://open-meteo.com/en/licence",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 2,
+      "url": "https://open-meteo.com/en/terms",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 3,
+      "url": "https://frankfurter.dev",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 4,
+      "url": "https://github.com/YOONPYOGitHub/azure-ai-workshop",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 5,
+      "url": "https://github.com/YOONPYOGitHub/aoai-function-calling",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 6,
+      "url": "https://github.com/YOONPYOGitHub/aoai-rag-pipeline",
+      "title": "",
+      "accessed": "2026-09-27"
+    },
+    {
+      "id": 7,
+      "url": "https://api.frankfurter.dev/v2/rates?base=JPY&quotes=KRW",
+      "title": "Frankfurter v2 JPY/KRW endpoint",
+      "accessed": "2026-09-27"
+    }
+  ]
+}

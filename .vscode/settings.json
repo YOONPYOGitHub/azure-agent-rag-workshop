@@ -1,0 +1,10 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+  "files.exclude": {
+    "**/__pycache__": true
+  },
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/.local/**": true
+  }
+}
