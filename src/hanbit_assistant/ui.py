@@ -4,15 +4,18 @@ import asyncio
 
 from .agent import ChatSession
 from .config import Settings
+from .experiments import BaselineSession
 
 
 class SessionRuntime:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, mode="agent", search_mode="hybrid"):
         self.runner = asyncio.Runner()
         self.closed = False
 
         async def create():
-            return ChatSession(settings)
+            if mode == "agent":
+                return ChatSession(settings)
+            return BaselineSession(settings, mode=mode, search_mode=search_mode)
 
         self.chat = self.runner.run(create())
 

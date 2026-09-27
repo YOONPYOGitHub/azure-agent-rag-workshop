@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Workshop: doctor",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--frozen",
+        "python",
+        "scripts/workshop.py",
+        "doctor"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Workshop: start",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--frozen",
+        "python",
+        "scripts/workshop.py",
+        "start"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

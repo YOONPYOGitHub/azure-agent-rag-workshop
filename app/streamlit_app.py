@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from pathlib import Path
+from time import monotonic
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ st.title("🧳 한빛 출장 도우미")
 st.caption("가상 회사 사규를 찾고, 실제 날씨와 환율을 연결하는 Agent + RAG 실습")
 
 with st.sidebar:
-    st.header("이 답변은 어떻게 만들어질까요?")
+    st.header("Agent 모드는 어떻게 동작할까요?")
     st.markdown(
         "**① 질문 이해** · Agent가 필요한 도구를 선택합니다.\n\n"
         "**② 근거 수집** · 사규는 Azure AI Search, 날씨는 Open-Meteo, 환율은 Frankfurter에서 가져옵니다.\n\n"
@@ -38,8 +39,36 @@ except ValueError:
     )
     st.stop()
 
-if "runtime" not in st.session_state:
-    st.session_state.runtime = SessionRuntime(settings)
+MODE_LABELS = {
+    "plain": "LLM만 · 도구/검색 없음",
+    "rag": "RAG · 검색 후 답변",
+    "agent": "Agent · 도구 자동 선택",
+}
+with st.sidebar:
+    mode = st.selectbox(
+        "학습 모드", ["agent", "plain", "rag"], format_func=MODE_LABELS.get, key="learning_mode"
+    )
+    search_mode = st.selectbox(
+        "검색 방식 (RAG 기준선)",
+        ["hybrid", "keyword", "vector"],
+        key="search_mode",
+        disabled=mode != "rag",
+    )
+    st.caption("Agent는 하이브리드 검색을 사용합니다. RAG 기준선에서만 검색 방식을 바꿉니다.")
+    st.caption(
+        "모드를 바꾸면 대화가 초기화됩니다. LLM/RAG는 매 질문 독립 실행, Agent만 대화 기억을 사용합니다."
+    )
+    st.info(
+        "같은 질문을 각 모드의 새 대화에서 실행하고, 근거·실제 호출·답변 차이를 비교하세요. 전 모드를 자동 실행하지 않습니다."
+    )
+
+runtime_config = (mode, search_mode)
+if "runtime" not in st.session_state or st.session_state.get("runtime_config") != runtime_config:
+    if "runtime" in st.session_state:
+        st.session_state.runtime.close()
+    st.session_state.runtime = SessionRuntime(settings, mode=mode, search_mode=search_mode)
+    st.session_state.runtime_config = runtime_config
+    st.session_state.messages = []
 if "messages" not in st.session_state:
     st.session_state.messages = []
 runtime = st.session_state.runtime
@@ -49,7 +78,7 @@ with st.sidebar:
     st.caption("세션별 대화 분리 · 원격 응답 저장 끔 · 질문당 도구 최대 6회 / 120초")
     if st.button("새 대화 / 초기화", key="reset_chat", use_container_width=True):
         runtime.close()
-        st.session_state.runtime = SessionRuntime(settings)
+        st.session_state.runtime = SessionRuntime(settings, mode=mode, search_mode=search_mode)
         st.session_state.messages = []
         st.rerun()
     st.caption(
@@ -60,6 +89,10 @@ with st.sidebar:
 def render_turn(turn):
     # 외부 모델/문서 Markdown을 렌더링하지 않습니다. 이미지 URL을 통한 추적도 방지합니다.
     st.text(turn["text"])
+    if "elapsed_seconds" in turn:
+        st.caption(
+            f"{turn['mode_label']} · {turn['elapsed_seconds']:.1f}초 · 검색 근거 {len(turn['sources'])}개"
+        )
     if turn["sources"]:
         with st.expander(f"검색 근거 · {len(turn['sources'])}개 청크", expanded=False):
             st.caption(
@@ -72,6 +105,9 @@ def render_turn(turn):
                 st.text(source["content"][:1200])
                 st.divider()
     with st.expander("도구 실행 내역 · 추론 과정이 아닌 실제 호출 기록", expanded=False):
+        st.caption(
+            "model_response는 LLM 호출이며 외부 도구가 아닙니다. 이 목록은 비공개 추론 과정이 아닌 실행 이벤트입니다."
+        )
         if turn["tool_events"]:
             st.dataframe(turn["tool_events"], hide_index=True, use_container_width=True)
         else:
@@ -93,13 +129,21 @@ for item in st.session_state.messages:
         else:
             render_turn(item)
 
-prompt = st.chat_input("출장 규정, 현재 날씨, 참고 환율을 질문하세요", max_chars=4000)
+if mode == "plain":
+    st.warning(
+        "LLM 기준선은 사규 문서·실시간 도구가 없습니다. 답변이 그럴듯해도 회사 규정의 근거가 아닙니다."
+    )
+elif mode == "rag":
+    st.info("RAG 기준선: 코드가 검색 → 답변 순서를 고정합니다. 도구 선택이나 대화 기억은 없습니다.")
+
+prompt = st.chat_input("출장 규정, 현재 날씨, 참고 환율을 질문하세요", max_chars=2000)
 if prompt:
     st.session_state.messages.append({"role": "user", "text": prompt})
     with st.chat_message("user"):
         st.text(prompt)
     with st.chat_message("assistant"):
         with st.spinner("필요한 도구와 근거를 확인하고 있습니다…"):
+            started = monotonic()
             try:
                 turn = asdict(runtime.run(runtime.chat.ask(prompt)))
             except AssistantError as exc:
@@ -110,5 +154,6 @@ if prompt:
                     "sources": [],
                     "tool_events": [],
                 }
+        turn.update(mode_label=MODE_LABELS[mode], elapsed_seconds=monotonic() - started)
         render_turn(turn)
         st.session_state.messages.append({"role": "assistant", **turn})

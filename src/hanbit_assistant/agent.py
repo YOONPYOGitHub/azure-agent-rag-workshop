@@ -150,23 +150,18 @@ class ChatSession:
                 "응답을 받지 못했습니다. 대화를 초기화했습니다. 키 권한/배포명/연결 상태를 확인하세요."
             ) from None
         text = response.text or "답변을 생성하지 못했습니다. 질문을 구체적으로 바꿔 주세요."
-        # 벡터 검색은 무관한 후보도 반환합니다. 명시적인 답변 보류에는 인용을 강제하지 않습니다.
+        # 답변 보류 뒤의 근거 없는 주장/인용은 버리고 안전한 고정 문구만 표시합니다.
         abstained = text.lstrip().startswith("제공된 문서에서 확인할 수 없습니다")
         search_failed = any(
             e["tool"] == "search_policy" and e["status"] == "error" for e in self.tool_events
         )
         if search_failed:
             text = "문서 검색 서비스 호출에 실패해 규정을 확인하지 못했습니다. 키 권한·인덱스·연결 상태를 확인하고 다시 시도하세요."
-        elif self._searched and not self.sources:
+        elif abstained or (self._searched and not self.sources):
             text = UNKNOWN_POLICY
-        elif (
-            self.sources
-            and not abstained
-            and (
-                not any(row["citation"] in text for row in self.sources)
-                or set(re.findall(r"\[([A-Za-z0-9_-]+)\]", text))
-                - {row["id"] for row in self.sources}
-            )
+        elif self.sources and (
+            not any(row["citation"] in text for row in self.sources)
+            or set(re.findall(r"\[([A-Za-z0-9_-]+)\]", text)) - {row["id"] for row in self.sources}
         ):
             text = "검색 문서는 찾았지만 답변의 근거 인용을 확인하지 못했습니다. 아래 출처를 확인하거나 다시 질문하세요."
         self.turn_count += 1
@@ -180,7 +175,9 @@ class ChatSession:
         self._searched = False
 
     async def close(self):
-        if self._owns_search:
-            await self.policy_search.close()
-        if self._owns_openai:
-            await self.openai.close()
+        try:
+            if self._owns_search:
+                await self.policy_search.close()
+        finally:
+            if self._owns_openai:
+                await self.openai.close()

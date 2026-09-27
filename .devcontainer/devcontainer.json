@@ -5,7 +5,11 @@
   },
   "remoteUser": "vscode",
   "postCreateCommand": "uv sync --frozen",
+  "waitFor": "postCreateCommand",
   "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md", ".env.example", "notebooks/00_setup.ipynb"]
+    },
     "vscode": {
       "extensions": [
         "ms-python.python",
@@ -13,16 +17,19 @@
         "charliermarsh.ruff"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "remote.localPortHost": "localhost"
       }
     }
   },
   "forwardPorts": [
     8501
   ],
+  "otherPortsAttributes": {"onAutoForward": "ignore"},
   "portsAttributes": {
     "8501": {
-      "label": "한빛 출장 도우미",
+      "label": "한빛 출장 도우미 — Private 유지",
+      "protocol": "http",
       "onAutoForward": "notify"
     }
   }
