@@ -1,0 +1,147 @@
+{
+  "verified_at": "2026-09-27T16:55:12.622823+00:00",
+  "local_live_checks": {
+    "doctor": "offline and --live passed",
+    "app_health": "HTTP 200 ok",
+    "browser": "real headless Chrome RAG response and 5 sources rendered",
+    "learning_modes": [
+      {
+        "mode": "plain",
+        "search_mode": "hybrid",
+        "seconds": 6.08,
+        "sources": 0,
+        "events": [
+          "model_response"
+        ],
+        "passed": true,
+        "outcome": "plain_response"
+      },
+      {
+        "mode": "rag",
+        "search_mode": "keyword",
+        "seconds": 5.86,
+        "sources": 5,
+        "events": [
+          "search_policy",
+          "model_response"
+        ],
+        "passed": true,
+        "outcome": "abstained"
+      },
+      {
+        "mode": "rag",
+        "search_mode": "vector",
+        "seconds": 6.47,
+        "sources": 5,
+        "events": [
+          "search_policy",
+          "model_response"
+        ],
+        "passed": true,
+        "outcome": "cited"
+      },
+      {
+        "mode": "rag",
+        "search_mode": "hybrid",
+        "seconds": 5.93,
+        "sources": 5,
+        "events": [
+          "search_policy",
+          "model_response"
+        ],
+        "passed": true,
+        "outcome": "cited"
+      },
+      {
+        "mode": "agent",
+        "search_mode": "hybrid",
+        "seconds": 9.73,
+        "sources": 5,
+        "events": [
+          "search_policy"
+        ],
+        "passed": true,
+        "outcome": "cited"
+      }
+    ]
+  },
+  "notebooks": [
+    {
+      "notebook": "00_setup.ipynb",
+      "source_matches": true,
+      "executed_cells": 2,
+      "expected_cells": 2,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "01_llm_and_tools.ipynb",
+      "source_matches": true,
+      "executed_cells": 4,
+      "expected_cells": 4,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "02_agent_framework.ipynb",
+      "source_matches": true,
+      "executed_cells": 2,
+      "expected_cells": 2,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "03_indexing.ipynb",
+      "source_matches": true,
+      "executed_cells": 6,
+      "expected_cells": 6,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "04_rag_and_citations.ipynb",
+      "source_matches": true,
+      "executed_cells": 3,
+      "expected_cells": 3,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "05_conversational_agent.ipynb",
+      "source_matches": true,
+      "executed_cells": 2,
+      "expected_cells": 2,
+      "error_outputs": 0,
+      "clean_source": true
+    },
+    {
+      "notebook": "06_evaluation_safety.ipynb",
+      "source_matches": true,
+      "executed_cells": 2,
+      "expected_cells": 2,
+      "error_outputs": 0,
+      "clean_source": true
+    }
+  ],
+  "evaluation_default_cases": {
+    "policy": true,
+    "unknown": true,
+    "weather": true,
+    "secret": true
+  },
+  "curriculum_minutes": 360,
+  "limitations": [
+    "Hosted Codespaces not executed locally; container build is checked by GitHub Actions after push.",
+    "Notebook changed-variable optional exercises were not all exhaustively live executed.",
+    "Timing is a bounded smoke sample, not a sustained 10-student capacity guarantee."
+  ],
+  "cloud_resource_changes": false,
+  "offline_tests": {
+    "passed": 124,
+    "subtests_passed": 10
+  },
+  "observations": [
+    "Final smoke: keyword RAG retrieved 5 candidates but safely abstained; vector/hybrid RAG and Agent cited their sources. Retrieval candidates are not a guarantee of answerability.",
+    "Earlier smoke required citations on every RAG response and failed on abstention; revised verification distinguishes cited answers from safe abstention rather than labeling them all factual-answer successes."
+  ]
+}

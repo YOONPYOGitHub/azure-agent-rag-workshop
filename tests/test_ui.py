@@ -111,3 +111,22 @@ def test_runtime_reuses_event_loop_and_closes_clients():
     assert runtime.run(loop_id()) == runtime.run(loop_id())
     runtime.close()
     runtime.close()  # teardown is idempotent
+
+
+def test_learning_mode_change_clears_history_and_selects_rag_strategy(monkeypatch):
+    monkeypatch.setenv("WORKSHOP_API_KEY", "ui-test-key-never-display")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://a.net/agent-rag/openai/v1")
+    monkeypatch.setenv("AZURE_SEARCH_ENDPOINT", "https://a.net/agent-rag/search")
+    monkeypatch.setenv("AZURE_SEARCH_INDEX", "student01")
+    app = AppTest.from_file(APP).run()
+    assert not app.exception
+    old_runtime = app.session_state["runtime"]
+    app.session_state["messages"] = [{"role": "user", "text": "이전 실험"}]
+    app.selectbox(key="learning_mode").select("rag").run()
+    assert not app.exception
+    assert old_runtime.closed
+    assert app.session_state["messages"] == []
+    assert app.session_state["runtime"].chat.mode == "rag"
+    app.selectbox(key="search_mode").select("keyword").run()
+    assert app.session_state["runtime"].chat.search_mode == "keyword"
+    app.session_state["runtime"].close()

@@ -15,6 +15,28 @@ jobs:
           version: "0.12.1"
           python-version: "3.11"
       - run: uv sync --frozen
-      - run: uv run pytest tests infra/tests -q
+      - name: Launcher tests (no Azure calls or credentials)
+        run: uv run --frozen pytest tests/test_workshop_launcher.py -q
+      - name: Existing application and infrastructure tests
+        run: uv run --frozen pytest tests infra/tests --ignore=tests/test_workshop_launcher.py -q
+      - run: uv run --frozen python scripts/workshop.py --help
       - run: uv run ruff check src app tests infra scripts
       - run: uv run python scripts/run_notebooks.py --check
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test devcontainer when Docker is available
+        shell: bash
+        run: |
+          if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+            docker build --tag workshop-devcontainer .devcontainer
+            docker run --rm \
+              --volume "$PWD:/workspaces/workshop" --workdir /workspaces/workshop \
+              --env PYTHON_DOTENV_DISABLED=1 \
+              workshop-devcontainer sh -lc \
+              'uv sync --frozen && uv run --frozen python scripts/workshop.py --help && uv run --frozen pytest tests/test_workshop_launcher.py -q'
+          else
+            echo "Docker unavailable: container build not verified."
+          fi

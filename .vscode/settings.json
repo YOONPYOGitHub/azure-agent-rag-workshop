@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+  "remote.localPortHost": "localhost",
   "files.exclude": {
     "**/__pycache__": true
   },
